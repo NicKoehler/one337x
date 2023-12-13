@@ -28,8 +28,12 @@ async fn main() {
         let client = Client::new();
 
         let res = client.get(url).send().await;
-        let Ok(res) = res else {
-            return;
+        let res = match res {
+            Ok(v) => v,
+            Err(e) => {
+                println!("{}", e.to_string().bold().red());
+                exit(1);
+            }
         };
 
         if !res.status().is_success() {
