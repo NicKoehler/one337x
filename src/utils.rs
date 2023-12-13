@@ -3,6 +3,7 @@ use crate::{
     types::{self, UserInput},
 };
 use colored::Colorize;
+use futures::future::join_all;
 use opener::open;
 use reqwest::Client;
 use std::{
@@ -158,9 +159,9 @@ fn get_first_page(current_page: usize) -> Result<UserInput, String> {
 }
 
 pub async fn get_magnet(client: Client, torrents: Vec<types::Torrent>, numbers: Vec<usize>) {
-    for n in numbers {
+    let futures = numbers.iter().map(|n| async {
         let req = client
-            .get(&torrents[n - 1].link)
+            .get(&torrents[*n - 1].link)
             .send()
             .await
             .expect("Failed to send request");
@@ -180,5 +181,6 @@ pub async fn get_magnet(client: Client, torrents: Vec<types::Torrent>, numbers: 
                 exit(1);
             }
         };
-    }
+    });
+    join_all(futures).await;
 }
