@@ -6,6 +6,7 @@ _Download torrents from 1337x directly from your command line_
 
 - [Installation](#installation)
 - [Usage](#usage)
+- [Tested Domains](#tested-domains)
 
 ## Installation
 
@@ -20,3 +21,8 @@ To see a list of available commands, run
 ```sh
 one337x --help
 ```
+
+## Tested Domains
+
+- [1337x.to](https://1337x.to/)
+- [1337xx.to](https://1337xx.to/)

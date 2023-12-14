@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use ego_tree::NodeRef;
 use scraper::{Html, Node, Selector};
 
@@ -6,7 +8,7 @@ use crate::types::{Page, Torrent};
 pub fn extract_torrent_data(
     html: String,
     domain: &String,
-) -> Result<(Vec<Torrent>, Vec<Page>), String> {
+) -> Result<(Vec<Torrent>, VecDeque<Page>), String> {
     let document = Html::parse_document(&html);
     let vec = extract_body(&document, domain)?;
     let pages = extract_pages(&document)?;
@@ -58,11 +60,11 @@ fn extract_body(document: &Html, domain: &String) -> Result<Vec<Torrent>, String
     Ok(results)
 }
 
-fn extract_pages(document: &Html) -> Result<Vec<Page>, String> {
+fn extract_pages(document: &Html) -> Result<VecDeque<Page>, String> {
     let pagination: Selector =
         Selector::parse("div.pagination > ul > li > a").expect("failed to parse selector");
 
-    let mut pages = vec![];
+    let mut pages = VecDeque::new();
 
     for page in document.select(&pagination) {
         let Some(v) = page.children().next() else {
@@ -78,24 +80,37 @@ fn extract_pages(document: &Html) -> Result<Vec<Page>, String> {
         };
 
         match v.as_str() {
-            "First" => pages.push(Page::First),
-            "Last" => pages.push(Page::Last(
-                link.split('/')
+            "First" => pages.push_back(Page::First),
+            "Last" => {
+                let num: usize = link
+                    .split('/')
                     .filter(|v| !v.is_empty())
                     .last()
                     .unwrap()
                     .parse()
-                    .unwrap(),
-            )),
-            "<<" => pages.push(Page::Previous),
-            ">>" => pages.push(Page::Next),
+                    .unwrap();
+                let Some(Page::Number(n)) = pages.back() else {
+                    continue;
+                };
+                if n != &num {
+                    pages.push_back(Page::Number(num));
+                }
+            }
+            "<<" | ">>" => continue,
+            "1..." | "1" => pages.push_back(Page::First),
             e => {
                 if let Ok(v) = e.parse::<usize>() {
-                    pages.push(Page::Number(v));
+                    pages.push_back(Page::Number(v));
                 } else {
                     return Err(String::from("Failed to parse page number"));
                 }
             }
+        }
+    }
+    if pages.len() > 1 {
+        let last_page = pages.pop_back().expect("Failed to get last page");
+        if let Page::Number(v) = last_page {
+            pages.push_back(Page::Last(v));
         }
     }
     Ok(pages)

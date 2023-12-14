@@ -15,6 +15,7 @@ use types::{Page, UserInput};
 async fn main() {
     let args = Args::parse();
     let mut current_page = 1;
+    let client = Client::new();
 
     loop {
         let url = utils::generate_url(
@@ -25,7 +26,6 @@ async fn main() {
             args.invert,
             current_page,
         );
-        let client = Client::new();
 
         let res = client.get(url).send().await;
         let res = match res {
@@ -75,7 +75,7 @@ async fn main() {
             )
         });
 
-        let mut is_last_page = true;
+        let mut is_last_page = false;
         if !pages.is_empty() {
             println!(
                 "Pages · {}",
@@ -90,14 +90,28 @@ async fn main() {
                                     format!("{}", page).to_string()
                                 }
                             }
-                            Page::Previous | Page::Next => format!("{}", page).bold().to_string(),
-                            page => format!("{}", page).blue().to_string(),
+                            Page::Last(page) => {
+                                if *page == current_page {
+                                    format!("Last ({})", page).bold().green().to_string()
+                                } else {
+                                    format!("Last ({})", page).blue().to_string()
+                                }
+                            }
+                            page => {
+                                if current_page == 1 {
+                                    format!("{}", page).bold().green().to_string()
+                                } else {
+                                    format!("{}", page).blue().to_string()
+                                }
+                            }
                         }
                     })
                     .collect::<Vec<String>>()
                     .join(" · ")
             );
-            is_last_page = !matches!(pages.last().expect("Pages is empty"), Page::Last(_));
+            if let Some(Page::Last(page)) = pages.back() {
+                is_last_page = *page == current_page;
+            }
         }
 
         let input = utils::get_input(torrents.len(), current_page, is_last_page);
@@ -117,7 +131,7 @@ async fn main() {
                 current_page = n;
                 continue;
             }
-            UserInput::Last => match pages.last().unwrap() {
+            UserInput::Last => match pages.back().unwrap() {
                 Page::Last(s) => current_page = *s,
                 _ => unreachable!("Last page is not last"),
             },

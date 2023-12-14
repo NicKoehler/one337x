@@ -129,8 +129,6 @@ pub enum UserInput {
 
 #[derive(Debug)]
 pub enum Page {
-    Next,
-    Previous,
     First,
     Last(usize),
     Number(usize),
@@ -140,8 +138,6 @@ impl std::fmt::Display for Page {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::First => write!(f, "First (1)"),
-            Self::Next => write!(f, "->"),
-            Self::Previous => write!(f, "<-"),
             Self::Last(v) => write!(f, "Last ({v})"),
             Self::Number(v) => write!(f, "{v}"),
         }
