@@ -94,7 +94,7 @@ impl ToString for Category {
     fn to_string(&self) -> String {
         match self {
             Self::Movies => "Movies".to_string(),
-            Self::Tv => "Tv".to_string(),
+            Self::Tv => "TV".to_string(),
             Self::Games => "Games".to_string(),
             Self::Music => "Music".to_string(),
             Self::Apps => "Apps".to_string(),
