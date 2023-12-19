@@ -158,7 +158,12 @@ fn get_first_page(current_page: usize) -> Result<UserInput, String> {
     Ok(UserInput::First)
 }
 
-pub async fn get_magnet(client: Client, torrents: Vec<types::Torrent>, numbers: Vec<usize>) {
+pub async fn get_magnet(
+    client: Client,
+    torrents: Vec<types::Torrent>,
+    numbers: Vec<usize>,
+    print_only: bool,
+) {
     let futures = numbers.iter().map(|n| async {
         let req = client
             .get(&torrents[*n - 1].link)
@@ -174,7 +179,11 @@ pub async fn get_magnet(client: Client, torrents: Vec<types::Torrent>, numbers: 
             req.text().await.expect("Failed to read response"),
         ) {
             Ok(v) => {
-                _ = open(v);
+                if print_only {
+                    println!("{}\n", v);
+                } else {
+                    _ = open(v);
+                }
             }
             Err(e) => {
                 println!("{}", e.bold().red());

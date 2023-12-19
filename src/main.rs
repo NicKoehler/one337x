@@ -118,16 +118,18 @@ async fn main() {
 
         match input {
             UserInput::Range(start, end) => {
-                break utils::get_magnet(client, torrents, (start..=end).collect()).await;
+                break utils::get_magnet(
+                    client,
+                    torrents,
+                    (start..=end).collect(),
+                    args.print_only,
+                )
+                .await;
             }
             UserInput::Space(numbers) => {
-                break utils::get_magnet(client, torrents, numbers).await;
+                break utils::get_magnet(client, torrents, numbers, args.print_only).await;
             }
-            UserInput::Next(n) => {
-                current_page = n;
-                continue;
-            }
-            UserInput::Previous(n) => {
+            UserInput::Next(n) | UserInput::Previous(n) => {
                 current_page = n;
                 continue;
             }
